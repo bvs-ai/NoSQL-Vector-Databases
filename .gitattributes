@@ -1,0 +1,3 @@
+# Скрипти і конфіги — завжди з LF, інакше bash у Git Bash/WSL ламається на \r
+* text=auto eol=lf
+*.sh text eol=lf

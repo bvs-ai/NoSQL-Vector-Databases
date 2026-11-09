@@ -1,0 +1,20 @@
+# Replica set rs0 з трьох вузлів MongoDB 7.0.
+# NET_ADMIN — щоб усередині контейнера імітувати збої мережі (tc — затримка, iptables — розрив).
+# ./scripts монтується у вузли: там watch.js для кроку 1.
+
+x-node: &node
+  build: ./node
+  image: nosql-lecture01-mongo:7.0
+  command: ["mongod", "--replSet", "rs0", "--bind_ip_all", "--wiredTigerCacheSizeGB", "0.25"]
+  cap_add: [NET_ADMIN]
+  volumes: ["./scripts:/scripts:ro"]
+  networks: [rsnet]
+
+services:
+  mongo1: { <<: *node, container_name: mongo1, hostname: mongo1 }
+  mongo2: { <<: *node, container_name: mongo2, hostname: mongo2 }
+  mongo3: { <<: *node, container_name: mongo3, hostname: mongo3 }
+
+networks:
+  rsnet:
+    name: rsnet
