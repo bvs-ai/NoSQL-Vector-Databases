@@ -1,0 +1,45 @@
+# Тема 2, практика ScooterShare: один вузол MongoDB 7.0, запущений як replica set rs0.
+# Replica set (навіть з одного вузла) потрібен для транзакцій — частина 4.
+# Кеш WiredTiger обмежено 0.5 ГБ — на ноутбуці мало пам'яті.
+# ./scripts монтується в контейнер: там готові скрипти до кожного завдання.
+
+services:
+  mongo:
+    image: mongo:7.0
+    container_name: mongo-scooter
+    hostname: mongo
+    command: mongod --replSet rs0 --bind_ip_all --wiredTigerCacheSizeGB 0.5
+    ports:
+      - "${HOST_PORT:-27017}:27017"
+    volumes:
+      - mongo-data:/data/db
+      - ./scripts:/scripts:ro
+    networks:
+      - scooter-net
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Одноразовий контейнер: ініціює replica set і завершується.
+  mongo-init:
+    image: mongo:7.0
+    container_name: mongo-scooter-init
+    depends_on:
+      mongo:
+        condition: service_healthy
+    networks:
+      - scooter-net
+    restart: "no"
+    entrypoint: >
+      mongosh --host mongo --quiet --eval '
+        rs.initiate({ _id: "rs0", members: [ { _id: 0, host: "mongo:27017" } ] })
+      '
+
+networks:
+  scooter-net:
+    name: scooter-net
+
+volumes:
+  mongo-data:
