@@ -1,0 +1,51 @@
+# Тема 3, частина 3: шардований кластер MongoDB 7.0 — топологія зі сценарію заняття.
+#
+#   mongos          — маршрутизатор: єдина точка входу, сам даних не зберігає
+#   cfg1..cfg3      — config servers (replica set "cfg"): метадані — який chunk на якому шарді
+#   node11..node13  — шард shard1 (replica set з трьох вузлів)
+#   node21..node23  — шард shard2 (replica set з трьох вузлів)
+#
+# 9 mongod + 1 mongos; кеш WiredTiger 0.25 ГБ на вузол → близько 1.6 ГБ пам'яті на весь кластер.
+# Порти на хост не відкриваємо: працюємо через docker exec mongos.
+
+x-mongod: &mongod
+  image: mongo:7.0
+  networks: [shard-net]
+
+x-cfg: &cfg
+  <<: *mongod
+  command: mongod --configsvr --replSet cfg --port 27019 --bind_ip_all --wiredTigerCacheSizeGB 0.25
+x-shard1: &shard1
+  <<: *mongod
+  command: mongod --shardsvr --replSet shard1 --port 27018 --bind_ip_all --wiredTigerCacheSizeGB 0.25
+x-shard2: &shard2
+  <<: *mongod
+  command: mongod --shardsvr --replSet shard2 --port 27018 --bind_ip_all --wiredTigerCacheSizeGB 0.25
+
+services:
+  cfg1: { <<: *cfg, container_name: cfg1, hostname: cfg1 }
+  cfg2: { <<: *cfg, container_name: cfg2, hostname: cfg2 }
+  cfg3: { <<: *cfg, container_name: cfg3, hostname: cfg3 }
+
+  node11: { <<: *shard1, container_name: node11, hostname: node11 }
+  node12: { <<: *shard1, container_name: node12, hostname: node12 }
+  node13: { <<: *shard1, container_name: node13, hostname: node13 }
+
+  node21: { <<: *shard2, container_name: node21, hostname: node21 }
+  node22: { <<: *shard2, container_name: node22, hostname: node22 }
+  node23: { <<: *shard2, container_name: node23, hostname: node23 }
+
+  mongos:
+    <<: *mongod
+    container_name: mongos
+    hostname: mongos
+    command: mongos --configdb cfg/cfg1:27019,cfg2:27019,cfg3:27019 --bind_ip_all --port 27017
+    # mongos стартує раніше, ніж ми ініціюємо cfg, і може впасти — тоді Docker перезапустить його.
+    restart: on-failure
+    depends_on: [cfg1, cfg2, cfg3, node11, node12, node13, node21, node22, node23]
+    volumes:
+      - ./scripts:/scripts:ro
+
+networks:
+  shard-net:
+    name: shard-net

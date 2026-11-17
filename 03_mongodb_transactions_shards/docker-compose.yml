@@ -1,0 +1,33 @@
+# Тема 3, частини 1–2: replica set rs0 з трьох вузлів MongoDB 7.0 + окремий контейнер-клієнт.
+#
+#   rs-mongo1, rs-mongo2, rs-mongo3 — три однакові mongod (хто з них Primary, вирішують вибори)
+#   rs-client                       — тут працює mongosh. Його ми не зупиняємо, тому під час
+#                                     "вбивства" Primary клієнт живий і бачить failover.
+#
+# Порти на хост не відкриваємо: усе йде через docker exec.
+# Кеш WiredTiger 0.25 ГБ на вузол — replica set займає близько 0.3 ГБ пам'яті.
+
+x-node: &node
+  image: mongo:7.0
+  networks: [rs-net]
+  volumes:
+    - ./scripts:/scripts:ro
+  command: mongod --replSet rs0 --bind_ip_all --wiredTigerCacheSizeGB 0.25
+
+services:
+  mongo1: { <<: *node, container_name: rs-mongo1, hostname: mongo1 }
+  mongo2: { <<: *node, container_name: rs-mongo2, hostname: mongo2 }
+  mongo3: { <<: *node, container_name: rs-mongo3, hostname: mongo3 }
+
+  # Клієнт: той самий образ (у ньому є mongosh), але замість mongod він просто "спить"
+  # і чекає на docker exec.
+  client:
+    <<: *node
+    container_name: rs-client
+    hostname: client
+    command: sleep infinity
+    depends_on: [mongo1, mongo2, mongo3]
+
+networks:
+  rs-net:
+    name: rs-net
