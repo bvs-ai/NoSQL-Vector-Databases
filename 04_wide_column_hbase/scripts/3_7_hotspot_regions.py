@@ -38,6 +38,8 @@ for name, make_key in KEYS.items():
     with table.batch(batch_size=500) as batch:
         for i in range(N):
             server = servers[i % 3]
+            # Фіксований час замість time.time(), щоб ключі збігалися з README:
+            # 1744000000000 мс = 2025-04-07 04:26:40 UTC; кожен наступний лог на 1 с пізніше
             ts = 1744000000000 + i * 1000
             batch.put(make_key(server, ts).encode(), {b'log:server': server.encode()})
 

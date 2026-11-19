@@ -18,6 +18,13 @@ table = conn.table('logs_good')
 NUM_BUCKETS = 4  # Кількість "кошиків" для розподілу
 
 
+def get_salt(server_id: str) -> int:
+    """Сіль: детермінований хеш від server_id → номер кошика 0..NUM_BUCKETS-1.
+    Один і той самий сервер ЗАВЖДИ отримує однакову сіль."""
+    h = hashlib.md5(server_id.encode()).hexdigest()
+    return int(h, 16) % NUM_BUCKETS
+
+
 def make_salted_key(server_id: str, timestamp: int) -> bytes:
     """
     Створюємо ключ: salt:server_id:reversed_timestamp
@@ -27,10 +34,7 @@ def make_salted_key(server_id: str, timestamp: int) -> bytes:
     2. server_id — групує логи одного сервера разом
     3. Зворотний timestamp — останні логи читаються першими
     """
-    # Сіль: детермінований хеш від server_id
-    # Один і той самий сервер ЗАВЖДИ отримує однакову сіль
-    h = hashlib.md5(server_id.encode()).hexdigest()
-    salt = int(h, 16) % NUM_BUCKETS
+    salt = get_salt(server_id)
 
     # Зворотний timestamp: віднімаємо від великого числа
     # Чим пізніше подія, тим менше це число
@@ -54,15 +58,15 @@ print("Записуємо логи з ГАРНИМ Row Key: salt:server_id:rever
 # Показуємо, яку сіль отримає кожен сервер
 print("Розподіл серверів по кошиках:")
 for server in servers:
-    h = hashlib.md5(server.encode()).hexdigest()
-    salt = int(h, 16) % NUM_BUCKETS
-    print(f"  {server} → кошик {salt}")
+    print(f"  {server} → кошик {get_salt(server)}")
 print()
 
 with table.batch() as batch:
     for i in range(15):
         server = servers[i % 3]
         message = messages[i % 5]
+        # Фіксований час замість time.time(), щоб ключі збігалися з README:
+        # 1744000000000 мс = 2025-04-07 04:26:40 UTC; кожен наступний лог на 1 с пізніше
         ts = 1744000000000 + (i * 1000)
         row_key = make_salted_key(server, ts)
         batch.put(row_key, {
