@@ -31,6 +31,8 @@ def get_server_logs(table, server_id: str, limit: int = 10):
     # Діапазон: всі ключі для цього сервера в цьому кошику
     row_start = f"{salt}:{server_id}:".encode()
     row_stop = f"{salt}:{server_id};".encode()  # ';' > ':' в ASCII
+    # У реальному коді межі руками не рахують — happybase зробить те саме сам:
+    #   table.scan(row_prefix=f"{salt}:{server_id}:".encode(), limit=limit)
 
     results = []
     for key, data in table.scan(row_start=row_start,
