@@ -1,0 +1,19 @@
+# Бонус до частини 4: що фізично лежить на диску до і після major compaction.
+# Потрібні таблиці з кроків 4.1 (versioned) і 4.3 (sessions).
+# Запуск: ./demo.sh step 4.4 (або ./demo.sh shell-file 4_4_raw.hbase)
+
+# 1. До compaction: RAW-скан показує все, що лежить у файлах, включно з «невидимим»
+scan 'versioned', {RAW => true, VERSIONS => 10}
+scan 'sessions',  {RAW => true, VERSIONS => 10}
+
+# 2. Скидаємо memstore у HFile і запускаємо major compaction (асинхронно)
+flush 'versioned'
+flush 'sessions'
+major_compact 'versioned'
+major_compact 'sessions'
+puts '... major compaction (5 с) ...'
+sleep 5; nil
+
+# 3. Після compaction: зайві версії і прострочені за TTL комірки зникли фізично
+scan 'versioned', {RAW => true, VERSIONS => 10}
+scan 'sessions',  {RAW => true, VERSIONS => 10}

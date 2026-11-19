@@ -7,6 +7,8 @@
 | --- | --- | --- |
 | 1 | Вступ до NoSQL, CAP і PACELC на кластері MongoDB | [`01_lecture_intro_nosql_cap`](01_lecture_intro_nosql_cap/) |
 | 2 | Основи MongoDB: CRUD, геопошук, індекси, агрегації, транзакції (практика ScooterShare) | [`02_lecture_mongodb_scootershare`](02_lecture_mongodb_scootershare/) |
+| 3 | MongoDB: реплікація і write concern, транзакції, шардування | [`03_mongodb_transactions_shards`](03_mongodb_transactions_shards/) |
+| 4 | Wide-column на прикладі Apache HBase: Shell, happybase, Row Key і hotspotting, версії і TTL ([завдання для самостійної роботи](04_wide_column_hbase/TASKS.md)) | [`04_wide_column_hbase`](04_wide_column_hbase/) |
 
 ## Що потрібно
 

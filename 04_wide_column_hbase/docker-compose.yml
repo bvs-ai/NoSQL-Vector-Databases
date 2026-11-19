@@ -1,0 +1,34 @@
+# Практика теми 4: HBase standalone + клієнт з Python і happybase.
+#   hbase  — Master, RegionServer, вбудований ZooKeeper і Thrift-сервер (9090) в одному контейнері
+#   client — Python 3.12 + happybase; скрипти з ./scripts змонтовані в /scripts
+# Запуск: ./demo.sh up   (або docker compose -p hbase up -d --build)
+name: hbase
+services:
+  hbase:
+    image: harisekhon/hbase:latest      # HBase 2.1.3 standalone
+    container_name: hbase
+    hostname: hbase
+    ports:
+      - "9090:9090"     # Thrift — щоб запускати happybase і з хоста
+      - "16010:16010"   # HBase Master Web UI: http://localhost:16010
+      - "16030:16030"   # RegionServer Web UI
+    environment:
+      - HBASE_HEAPSIZE=1G               # обмежуємо пам'ять JVM
+    volumes:
+      - hbase_data:/hbase-data
+      - ./scripts:/scripts:ro           # .hbase-скрипти для hbase shell
+  client:
+    build: ./client
+    image: hbase-demo-client
+    container_name: hbase-client
+    depends_on: [hbase]
+    environment:
+      - HBASE_HOST=hbase
+      - PYTHONWARNINGS=ignore::UserWarning   # глушимо попередження pkg_resources з happybase
+    working_dir: /scripts
+    volumes:
+      - ./scripts:/scripts:ro
+    command: sleep infinity
+
+volumes:
+  hbase_data:
