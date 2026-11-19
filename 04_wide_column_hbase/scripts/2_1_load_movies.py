@@ -25,8 +25,8 @@ if TABLE_NAME.encode() in conn.tables():
 conn.create_table(
     TABLE_NAME,
     {
-        'info': dict(max_versions=1),
-        'meta': dict(max_versions=1),
+        'info': {'max_versions': 1},
+        'meta': {'max_versions': 1},
     }
 )
 print(f"Таблиця '{TABLE_NAME}' створена")

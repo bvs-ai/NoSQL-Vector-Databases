@@ -16,7 +16,7 @@ conn.open()
 if b'speed_test' in conn.tables():
     conn.disable_table('speed_test')
     conn.delete_table('speed_test')
-conn.create_table('speed_test', {'d': dict()})
+conn.create_table('speed_test', {'d': {}})
 table = conn.table('speed_test')
 
 N = 500
@@ -35,7 +35,7 @@ print(f"Звичайний запис {N} рядків: {elapsed_single:.2f} с�
 # Видаляємо і створюємо знову для чистоти
 conn.disable_table('speed_test')
 conn.delete_table('speed_test')
-conn.create_table('speed_test', {'d': dict()})
+conn.create_table('speed_test', {'d': {}})
 table = conn.table('speed_test')
 
 # Batch запис — всі put групуються і відправляються пачками по 100

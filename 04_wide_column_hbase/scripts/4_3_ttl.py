@@ -22,8 +22,8 @@ if b'sessions' in conn.tables():
 conn.create_table(
     'sessions',
     {
-        'session': dict(time_to_live=5),   # Закінчується через 5 секунд
-        'user':    dict(),                  # Без TTL — зберігається вічно
+        'session': {'time_to_live': 5},   # Закінчується через 5 секунд
+        'user':    {},                    # Без TTL — зберігається вічно
     }
 )
 table = conn.table('sessions')

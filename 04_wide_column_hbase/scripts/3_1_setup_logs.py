@@ -16,7 +16,7 @@ for table_name in [b'logs_bad', b'logs_good']:
         conn.disable_table(table_name)
         conn.delete_table(table_name)
 
-conn.create_table('logs_bad', {'log': dict(max_versions=1)})
-conn.create_table('logs_good', {'log': dict(max_versions=1)})
+conn.create_table('logs_bad', {'log': {'max_versions': 1}})
+conn.create_table('logs_good', {'log': {'max_versions': 1}})
 print("Таблиці створені")
 conn.close()

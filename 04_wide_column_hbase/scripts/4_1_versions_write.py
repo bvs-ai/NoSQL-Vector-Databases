@@ -18,7 +18,7 @@ if b'versioned' in conn.tables():
 
 conn.create_table(
     'versioned',
-    {'data': dict(max_versions=5)}
+    {'data': {'max_versions': 5}}
 )
 table = conn.table('versioned')
 
